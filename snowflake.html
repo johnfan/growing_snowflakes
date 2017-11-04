@@ -1,0 +1,213 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+      canvas {
+        width: 600px;
+        height: 600px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="600" height="600"></canvas>
+    <script>
+
+      var ctx = document.querySelector('#canvas').getContext('2d');
+
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      var x_0 = canvas.width/2; // x center
+      var y_0 = canvas.height/2; // y center
+
+      var basic_step = 10.0;
+      var x_circle, y_circle;
+      var i,j,a,b;
+      var snowflake_mode = 3;
+
+      if (snowflake_mode == 0) {
+        // preset
+        var snowflake_coords = [[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[3,1],[1,0],[2,0],[3,0],[4,0],[5,0],[1,3]];
+      }
+      else if (snowflake_mode == 1) {
+        // random
+        var snowflake_coords = new Array();
+        for (j=0; j<30; j++) {
+          for (i=0; i<30-j; i++) {
+            if (Math.random()<0.3) {
+              snowflake_coords.push([i,j]);
+              snowflake_coords.push([j,i]);
+            }
+          }
+        }
+      }
+      else if (snowflake_mode == 2) {
+        // grow a snowflake
+
+        // new 2D array
+        var sn_array = new Array();
+        for (i=0; i<30; i++) {
+          row_array = new Array();
+          for (j=0; j<30; j++) {
+            row_array[j] = 0;
+          }
+          sn_array[i] = row_array;
+        }
+
+        // traverse diagonally for layers of hexagon
+        sn_array[0][0] = 1;
+        sn_array[0][1] = 1;
+        sn_array[1][0] = 1;
+        // let's work in (a,b) coordinates, which map to
+        // i = a-b
+        // j = b 
+        for (a=2; a<30; a++) {
+          sn_array[a][0] = 1;
+          sn_array[0][a] = 1;
+          for (b=1; b<=a/2; b++) {
+            // look at (a-1,b-1) and (a-1,b)
+            // in terms of (i,j)-coords, that's
+            // (i,j) = (a-b, b-1) and (i,j) = (a-b-1, b)
+            num_neighbors = sn_array[a-b][b-1] + sn_array[a-b-1][b];
+            if ((num_neighbors==1 && Math.random()<0.7) || (num_neighbors==2 && Math.random()<0.2)) {
+              sn_array[a-b][b] = 1;
+              sn_array[b][a-b] = 1;
+            } 
+          }
+        }
+        // convert array to coords
+        var snowflake_coords = new Array();
+
+        for (i=0; i<30; i++) {
+          for (j=0; j<30; j++) {
+            if (sn_array[i][j] == 1) {
+              snowflake_coords.push([i,j])
+            } 
+          }
+        }
+        console.log(snowflake_coords);
+
+      }
+
+      else if (snowflake_mode == 3) {
+        // grow a snowflake
+
+        // new 2D array
+        var sn_array = new Array();
+        for (i=0; i<30; i++) {
+          row_array = new Array();
+          for (j=0; j<30; j++) {
+            row_array[j] = 0;
+          }
+          sn_array[i] = row_array;
+        }
+
+        // traverse diagonally for layers of hexagon
+        sn_array[0][0] = 1;
+        sn_array[0][1] = 1;
+        sn_array[1][0] = 1;
+        // let's work in (a,b) coordinates, which map to
+        // i = a-b
+        // j = b 
+        for (z=4; z<30; z=z+4) {
+          for (a=2; a<z; a++) {
+            sn_array[a][0] = 1;
+            sn_array[0][a] = 1;
+            for (b=1; b<=a/2; b++) {
+              // look at (a-1,b-1), (a-1,b), (a,b-1), (a,b+1), (a+1,b), (a+1,b+1)
+              // in terms of (i,j)-coords, that's
+              // (a-b,b-1), (a-b-1,b), (a-b+1,b-1), (a-b-1,b+1), (a-b+1,b), (a-b, b+1)
+              num_neighbors = sn_array[a-b][b-1] + sn_array[a-b-1][b] + 
+                sn_array[a-b+1][b-1] + sn_array[a-b-1][b+1] +
+                sn_array[a-b+1][b] + sn_array[a-b][b+1]
+
+              if ((sn_array[a-b][b-1] + sn_array[a-b-1][b]>=1) && 
+                  ((num_neighbors==1 && Math.random()<0.5) 
+                  || (num_neighbors==2 && Math.random()<0.3))) {
+                sn_array[a-b][b] = 1;
+                sn_array[b][a-b] = 1;
+              } 
+            }
+          }
+
+        }
+        // convert array to coords
+        var snowflake_coords = new Array();
+
+        for (i=0; i<30; i++) {
+          for (j=0; j<30; j++) {
+            if (sn_array[i][j] == 1) {
+              snowflake_coords.push([i,j])
+            } 
+          }
+        }
+        console.log(snowflake_coords);
+
+      }
+
+      console.log("circle");
+
+      for (i=0; i<snowflake_coords.length; i++) {
+        console.log(i);
+        coord = snowflake_coords[i];
+        hex_row = coord[0];
+        hex_col = coord[1];
+        console.log(hex_row,hex_col);
+
+        ctx.beginPath();
+        x_circle = x_0 + (hex_col + hex_row*0.5) * basic_step;
+        y_circle = y_0 + 0.86602540378*hex_row*basic_step;
+        console.log(x_circle, y_circle); 
+        ctx.arc(x_circle, y_circle, basic_step/2, 0, 2 * Math.PI, false);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+
+        ctx.beginPath();
+        x_circle = x_0 + (hex_col + hex_row*0.5) * basic_step;
+        y_circle = y_0 - 0.86602540378*hex_row*basic_step;
+        console.log(x_circle, y_circle); 
+        ctx.arc(x_circle, y_circle, basic_step/2, 0, 2 * Math.PI, false);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+            
+        ctx.beginPath();
+        x_circle = x_0 - (hex_col + hex_row*0.5) * basic_step;
+        y_circle = y_0 + 0.86602540378*hex_row*basic_step;
+        console.log(x_circle, y_circle); 
+        ctx.arc(x_circle, y_circle, basic_step/2, 0, 2 * Math.PI, false);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+
+        ctx.beginPath();
+        x_circle = x_0 - (hex_col + hex_row*0.5) * basic_step;
+        y_circle = y_0 - 0.86602540378*hex_row*basic_step;
+        console.log(x_circle, y_circle); 
+        ctx.arc(x_circle, y_circle, basic_step/2, 0, 2 * Math.PI, false);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+
+        ctx.beginPath();
+        x_circle = x_0 - (0.5*hex_col - hex_row*0.5) * basic_step;
+        y_circle = y_0 - 0.86602540378*(hex_row+hex_col)*basic_step;
+        console.log(x_circle, y_circle); 
+        ctx.arc(x_circle, y_circle, basic_step/2, 0, 2 * Math.PI, false);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+
+        ctx.beginPath();
+        x_circle = x_0 + (0.5*hex_col - hex_row*0.5) * basic_step;
+        y_circle = y_0 + 0.86602540378*(hex_row+hex_col)*basic_step;
+        console.log(x_circle, y_circle); 
+        ctx.arc(x_circle, y_circle, basic_step/2, 0, 2 * Math.PI, false);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+    
+      }
+
+
+    </script>
+  </body>
+</html>    
